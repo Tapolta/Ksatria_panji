@@ -4,11 +4,13 @@
 #include <SDL3/SDL.h>
 #include <vector>
 #include <string>
+#include "Text.h"
 
 class GameObject {
   protected:
     SDL_FRect d_object;
     SDL_Renderer* renderer = nullptr;
+    Text* text = nullptr;
     std::vector<SDL_Texture*> img_list;
     float frameTimer = 0.0f, frameDuration = 0.1f;
     int currentFrame = 0;
@@ -32,6 +34,8 @@ class GameObject {
     void removeImgList();
     void addBackground(SDL_Color color);
     void removeBackground();
+    void addText(std::string text);
+    Text* getText();
 };
 
 #endif

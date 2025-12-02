@@ -88,3 +88,12 @@ void GameObject::removeImgList() {
 
   img_list.clear();
 }
+
+void GameObject::addText(std::string text) {
+  this->text = new Text(renderer);
+  this->text->setText(text);
+}
+
+Text* GameObject::getText() {
+  return this->text;
+}
