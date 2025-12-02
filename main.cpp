@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
   srand(static_cast<unsigned>(time(nullptr)));
 
-  WindowStruct s_window = {"Screen1", 800.0f, 600.0f};
+  WindowStruct s_window = {"Screen1", 1000.0f, 700.0f};
 
   SDL_Window* window = createWindow(s_window);
   if (!window) return 1;
@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
 
   Player* player = new Player(renderer, s_window.width / 8);
   game_manager->addGameObject(player);
+  game_manager->setPlayer(player);
   player->setImgPaths({
     "assets/panji/RUN1.png",
     "assets/panji/RUN2.png",
@@ -45,7 +46,7 @@ int main(int argc, char** argv) {
     "assets/panji/RUN6.png",
     "assets/panji/RUN7.png",
   });
-  player->setObjectD({100.0f, s_window.height - 320.0f, 300.0f, 300.0f});
+  player->setObjectD({0 + (s_window.width / 8 * 2), s_window.height - 320.0f, 300.0f, 300.0f});
 
   GameObject* enemy = new GameObject(renderer);
   game_manager->addGameObject(enemy);
@@ -76,7 +77,7 @@ int main(int argc, char** argv) {
 }
 
 bool libraryReady() {
-  bool isReady = SDL_Init(SDL_INIT_VIDEO) && TTF_Init();
+  bool isReady = SDL_Init(SDL_INIT_VIDEO) && TTF_Init() && SDL_Init(SDL_INIT_AUDIO);
   
   if (!isReady) {
     SDL_SetError("Failed to perfom SDL: Reason %s", SDL_GetError());
@@ -121,6 +122,15 @@ void loop(SDL_Renderer* renderer) {
       if (event.type == SDL_EVENT_KEY_DOWN) {
         if (event.key.key == SDLK_ESCAPE) {
           *running = false;
+        }
+
+        SDL_Keycode key = SDL_GetKeyFromScancode(event.key.scancode, SDL_KMOD_NONE, true);
+        char c = (char)key;
+
+        if (c >= 'A' && c <= 'Z') c = c + 32;
+
+        if (c >= 'a' && c <= 'z') {
+          game_manager->handleInput(c);
         }
       }
     }

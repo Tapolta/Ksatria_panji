@@ -23,10 +23,11 @@ class GameObject {
     float tw, th, texScale = 4.0f;
 
     void renderBg();
+    void renderText(float dt);
 
   public:
     GameObject(SDL_Renderer* renderer);
-    // ~GameObject();
+    ~GameObject();
     virtual void update(float dt);
     void setObjectD(SDL_FRect new_d);
     SDL_FRect getObjectD();

@@ -6,13 +6,18 @@
 class Obstacle : public GameObject {
   private:
     float speed = 300.0f;
-    char main_char;
+    char key;
 
     void movement(float dt);
+    void setBackground();
+    char randomChar();
   
   public:
     Obstacle(SDL_Renderer* renderer);
     void update(float dt) override;
+    void setTextPos();
+    void readyInput();
+    char getKey();
 };
 
 #endif

@@ -1,18 +1,20 @@
 #include "../include/class/GameObject.h"
 #include <SDL3_image/SDL_image.h>
+#include <iostream>
 
 GameObject::GameObject(SDL_Renderer* renderer) {
   this->renderer = renderer;
 }
 
-// GameObject::~GameObject() {
-//   if (!img_list.empty()) removeImgList();
-//   if (texture_bg) removeBackground();
-//   delete bg_color;
-// }
+GameObject::~GameObject() {
+  if (!img_list.empty()) removeImgList();
+  if (texture_bg) removeBackground();
+  delete bg_color;
+}
 
 void GameObject::update(float dt) {
   if (bg_color) renderBg();
+  if (text) renderText(dt);
   if (!img_list.empty()) renderFrames(dt);
 }
 
@@ -62,8 +64,10 @@ void GameObject::setImgPaths(std::vector<std::string> imageFrames) {
 
   if (!img_list.empty()) {
     SDL_GetTextureSize(img_list[0], &tw, &th);
-    this->d_object.w = tw;
-    this->d_object.h = th;
+    if (d_object.w == 0 || d_object.h == 0) {
+      d_object.w = tw;
+      d_object.h = th;
+    }
   }
 }
 
@@ -92,8 +96,13 @@ void GameObject::removeImgList() {
 void GameObject::addText(std::string text) {
   this->text = new Text(renderer);
   this->text->setText(text);
+  this->text->settextD(d_object);
 }
 
 Text* GameObject::getText() {
   return this->text;
+}
+
+void GameObject::renderText(float dt) {
+  text->update();
 }

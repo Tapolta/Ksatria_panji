@@ -1,17 +1,46 @@
 #include "../include/class/GameManager.h"
 #include <algorithm>
+#include <iostream>
 
 GameManager::GameManager(SDL_Renderer* renderer, WindowStruct* s_window) {
   this->s_window = s_window;
   this->renderer = renderer;
+
+  phase = MAX_PHASE;
+
+  game_over = new GameObject(renderer);
+  game_over->addText("Permainan Berakhir");
+  game_over->setObjectD({0, 0, s_window->height, s_window->width});
+  game_over->getText()->setFontSize(72);
+
+  teks_jarak = new GameObject(renderer);
+  teks_jarak->addText("Jarak: 0");
+  teks_jarak->setObjectD({0,0,1.0f,1.0f});
+  addGameObject(teks_jarak);
 }
 
-void GameManager::update(float dt) {
-  for (auto i : go_list) i->update(dt);
+GameManager::~GameManager() {
+  if (game_over) delete game_over;
+  if (teks_jarak) delete teks_jarak;
+}
+
+void GameManager::update(float dt) 
+{
+  if (is_game_over) {
+    game_over->update(dt);
+    return;
+  }
+
+  for (GameObject* obj : go_list) if (obj) obj->update(dt);
 
   if (!ground_list.empty()) groundMove(dt);
+
+  updateJarak(dt);
   spawnObstacle(dt);
   removeObstacle();
+  spawnPohon(dt);
+  removePohon();
+  inputZone();
 }
 
 void GameManager::addGameObject(GameObject* go) {
@@ -60,25 +89,21 @@ void GameManager::groundMove(float dt) {
 }
 
 void GameManager::destroyGrounds() {
-  for (auto i : ground_list) {
-    delete i;
-  }
-
+  for (auto i : ground_list) delete i;
   ground_list.clear();
 }
 
 void GameManager::spawnObstacle(float dt) {
-  timerObstacle += dt;
+  timer_obstacle += dt;
 
-  if (timerObstacle >= nextObstacleTime) {
-    timerObstacle = 0.0f;
+  if (timer_obstacle >= next_obstacle_time) {
+    timer_obstacle = 0.0f;
 
-    nextObstacleTime = randomRange(1.0f, 5.0f);
+    next_obstacle_time = randomRange(1.0f, 5.0f);
 
     Obstacle* obs = new Obstacle(renderer);
-    obs->addBackground({0,0,0,255});
 
-    SDL_FRect pos = { s_window->width, s_window->height - 350.0f, 100, 100 };
+    SDL_FRect pos = {s_window->width, s_window->height - 350.0f, 100, 100};
     obs->setObjectD(pos);
 
     obstacle_list.push_back(obs);
@@ -90,22 +115,149 @@ float GameManager::randomRange(float min, float max) {
   return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
 }
 
-
 void GameManager::removeObstacle() {
-  obstacle_list.erase(
-    std::remove_if(obstacle_list.begin(), obstacle_list.end(),
-    [&](Obstacle* obs) {
-      if (obs->getObjectD().x < -obs->getObjectD().w) {
-        go_list.erase(
-          std::remove(go_list.begin(), go_list.end(), obs),
-          go_list.end()
-        );
+  auto it = obstacle_list.begin();
+  while (it != obstacle_list.end()) {
+    Obstacle* obs = *it;
 
-        delete obs;
-        return true;
-      }
-      return false;
-    }),
-    obstacle_list.end()
-  );
+    if (obs->getObjectD().x < -obs->getObjectD().w ||
+      obs->getObjectD().x < player->getObjectD().x)
+    {
+      go_list.erase(
+        std::remove(go_list.begin(), go_list.end(), obs),
+        go_list.end()
+      );
+
+      playerFailed();
+
+      delete obs;
+      it = obstacle_list.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+void GameManager::setPlayer(Player* player) {
+  this->player = player;
+}
+
+void GameManager::playerFailed() {
+  if (player && phase > MIN_PHASE) {
+    player->failed();
+    phase--;
+  }
+
+  is_game_over = phase <= MIN_PHASE;
+}
+
+void GameManager::playerSuccess() {
+  if (player && phase < MAX_PHASE) {
+    player->success();
+    phase++;
+  }
+}
+
+void GameManager::GameOver(float dt) {
+  game_over->update(dt);
+}
+
+void GameManager::updateJarak(float dt) {
+  jarak_timer += dt;
+
+  if (jarak_timer >= 0.5f) {
+    jarak += 1; 
+    jarak_timer = 0.0f;
+
+    teks_jarak->addText("Jarak: " + std::to_string(jarak));
+  }
+}
+
+void GameManager::handleInput(char key) {
+  if (!active_obstacle) return;
+
+  if (key == active_obstacle->getKey()) {
+
+    playerSuccess();
+
+    go_list.erase(
+      std::remove(go_list.begin(), go_list.end(), active_obstacle),
+      go_list.end()
+    );
+
+    obstacle_list.erase(
+      std::remove(obstacle_list.begin(), obstacle_list.end(), active_obstacle),
+      obstacle_list.end()
+    );
+
+    delete active_obstacle;
+    active_obstacle = nullptr;
+  }
+}
+
+void GameManager::spawnPohon(float dt) {
+  timer_pohon += dt;
+
+  if (timer_pohon >= next_pohon_time) {
+    timer_pohon = 0.0f;
+
+    next_pohon_time = randomRange(3.0f, 7.0f);
+
+    GameObject* pohon = new GameObject(renderer);
+
+    pohon->setObjectD({
+      s_window->width,             
+      s_window->height - 600.0f,
+      400.0f,
+      600.0f
+    });
+
+    pohon->setImgPaths({
+      "assets/pohon/pohon.png"
+    });
+
+    pohon_list.push_back(pohon);
+    go_list.push_back(pohon);
+  }
+
+  for (auto pohon : pohon_list) {
+    pohon->setObjectD({
+      pohon->getObjectD().x - (ground_speed * dt),
+      pohon->getObjectD().y,
+      pohon->getObjectD().w,
+      pohon->getObjectD().h,
+    });
+  }
+}
+
+void GameManager::removePohon() {
+  auto it = pohon_list.begin();
+
+  while (it != pohon_list.end()) {
+    GameObject* pohon = *it;
+
+    if (pohon->getObjectD().x < -pohon->getObjectD().w) {
+      go_list.erase(
+        std::remove(go_list.begin(), go_list.end(), pohon),
+        go_list.end()
+      );
+
+      delete pohon;
+      it = pohon_list.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+void GameManager::inputZone() {
+  for (Obstacle* obs : obstacle_list) {
+    if (obs->getObjectD().x < (player->getObjectD().x + 300.0f)) {
+      obs->readyInput();
+      active_obstacle = obs;
+      return;
+    }
+  }
+
+  active_obstacle = nullptr;
 }
