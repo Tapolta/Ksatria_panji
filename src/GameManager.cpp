@@ -8,6 +8,9 @@ GameManager::GameManager(SDL_Renderer* renderer, WindowStruct* s_window) {
 
   phase = MAX_PHASE;
 
+  success_sound = new Sound();
+  failed_sound = new Sound();
+
   game_over = new GameObject(renderer);
   game_over->addText("Permainan Berakhir");
   game_over->setObjectD({0, 0, s_window->height, s_window->width});
@@ -22,6 +25,9 @@ GameManager::GameManager(SDL_Renderer* renderer, WindowStruct* s_window) {
 GameManager::~GameManager() {
   if (game_over) delete game_over;
   if (teks_jarak) delete teks_jarak;
+  if (success_sound) delete success_sound;
+  if (failed_sound) delete failed_sound;
+  if(active_obstacle) delete active_obstacle;
 }
 
 void GameManager::update(float dt) 
@@ -147,7 +153,8 @@ void GameManager::playerFailed() {
     player->failed();
     phase--;
   }
-
+  
+  failed_sound->playSound("assets/sound/damage.wav");
   is_game_over = phase <= MIN_PHASE;
 }
 
@@ -156,6 +163,8 @@ void GameManager::playerSuccess() {
     player->success();
     phase++;
   }
+  
+  success_sound->playSound("assets/sound/success.wav");
 }
 
 void GameManager::GameOver(float dt) {
@@ -173,26 +182,32 @@ void GameManager::updateJarak(float dt) {
   }
 }
 
-void GameManager::handleInput(char key) {
+void GameManager::handleInput(SDL_Event* event) {
   if (!active_obstacle) return;
 
+  SDL_Keycode key = SDL_GetKeyFromScancode(event->key.scancode, SDL_KMOD_NONE, true);
+  char c = (char)key;
+  if (c >= 'A' && c <= 'Z') c = c + 32;
+  if (c < 'a' || c > 'z') return;
+
   if (key == active_obstacle->getKey()) {
-
     playerSuccess();
-
-    go_list.erase(
-      std::remove(go_list.begin(), go_list.end(), active_obstacle),
-      go_list.end()
-    );
-
-    obstacle_list.erase(
-      std::remove(obstacle_list.begin(), obstacle_list.end(), active_obstacle),
-      obstacle_list.end()
-    );
-
-    delete active_obstacle;
-    active_obstacle = nullptr;
+  } else {
+    playerFailed();
   }
+
+  go_list.erase(
+    std::remove(go_list.begin(), go_list.end(), active_obstacle),
+    go_list.end()
+  );
+
+  obstacle_list.erase(
+    std::remove(obstacle_list.begin(), obstacle_list.end(), active_obstacle),
+    obstacle_list.end()
+  );
+
+  delete active_obstacle;
+  active_obstacle = nullptr;
 }
 
 void GameManager::spawnPohon(float dt) {

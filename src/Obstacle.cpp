@@ -5,6 +5,7 @@ Obstacle::Obstacle(SDL_Renderer* renderer) : GameObject(renderer) {
   key = randomChar();
   this->text->setText(std::string(1, key));
   this->text->setFontSize(60);
+  speed = 400.0f;
 
   setBackground();
 }

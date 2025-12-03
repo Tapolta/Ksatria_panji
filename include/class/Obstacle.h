@@ -5,7 +5,7 @@
 
 class Obstacle : public GameObject {
   private:
-    float speed = 300.0f;
+    float speed;
     char key;
 
     void movement(float dt);

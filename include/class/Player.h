@@ -8,8 +8,6 @@ class Player : public GameObject {
   protected:
     void renderFrames(float dt) override;
     Sound* running = nullptr;
-    Sound* failed_sound = nullptr;
-    Sound* success_sound = nullptr;
 
   private:
     float move_distance;

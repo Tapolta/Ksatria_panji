@@ -16,6 +16,8 @@ class GameManager {
     GameObject* game_over;
     GameObject* teks_jarak;
     Obstacle* active_obstacle = nullptr;
+    Sound* failed_sound = nullptr;
+    Sound* success_sound = nullptr;
     std::vector<GameObject*> go_list;
     std::vector<GameObject*> ground_list;
     std::vector<Obstacle*> obstacle_list;
@@ -44,7 +46,7 @@ class GameManager {
     void setPlayer(Player* player);
     void playerSuccess();
     void GameOver(float dt);
-    void handleInput(char input);
+    void handleInput(SDL_Event* event);
     void spawnPohon(float dt);
     void removePohon();
     void inputZone();

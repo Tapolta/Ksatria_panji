@@ -19,7 +19,7 @@ bool* running;
 int main(int argc, char** argv) {
   if (!libraryReady()) return 1;
 
-  srand(static_cast<unsigned>(time(nullptr)));
+  srand(time(NULL));
 
   WindowStruct s_window = {"Screen1", 1000.0f, 700.0f};
 
@@ -51,16 +51,14 @@ int main(int argc, char** argv) {
   GameObject* enemy = new GameObject(renderer);
   game_manager->addGameObject(enemy);
   enemy->setImgPaths({
-    "assets/musuh/Warrior_Run_1.png",
-    "assets/musuh/Warrior_Run_2.png",
-    "assets/musuh/Warrior_Run_3.png",
-    "assets/musuh/Warrior_Run_4.png",
-    "assets/musuh/Warrior_Run_5.png",
-    "assets/musuh/Warrior_Run_6.png",
-    "assets/musuh/Warrior_Run_7.png",
-    "assets/musuh/Warrior_Run_8.png",
+    "assets/musuh/musuh1.png",
+    "assets/musuh/musuh2.png",
+    "assets/musuh/musuh3.png",
+    "assets/musuh/musuh4.png",
+    "assets/musuh/musuh5.png",
+    "assets/musuh/musuh6.png",
   });
-  enemy->setObjectD({-55.0f, s_window.height - 300.0f, 220.0f, 220.0f});
+  enemy->setObjectD({-55.0f, s_window.height - 340.0f, 220.0f, 240.0f});
 
   game_manager->addGrounds("assets/ground/grass.png", {
     (s_window.width / 2) - (s_window.width / 2),
@@ -124,14 +122,7 @@ void loop(SDL_Renderer* renderer) {
           *running = false;
         }
 
-        SDL_Keycode key = SDL_GetKeyFromScancode(event.key.scancode, SDL_KMOD_NONE, true);
-        char c = (char)key;
-
-        if (c >= 'A' && c <= 'Z') c = c + 32;
-
-        if (c >= 'a' && c <= 'z') {
-          game_manager->handleInput(c);
-        }
+        game_manager->handleInput(&event);
       }
     }
 
@@ -143,7 +134,7 @@ void loop(SDL_Renderer* renderer) {
       dt = 0;
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 100, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 13, 180, 185, 255);
     SDL_RenderClear(renderer);
 
     game_manager->update(dt);
